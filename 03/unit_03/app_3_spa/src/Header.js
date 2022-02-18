@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 function Header(props) {
 
-  const liList = props.nav.map(el => <li key={el.text} ><Link to={el.link}>{el.text}</Link></li>);
+  const liList = props.nav.map(el => <li key={el.text} ><NavLink to={el.link}>{el.text}</NavLink></li>);
 
   return (
     <nav>
