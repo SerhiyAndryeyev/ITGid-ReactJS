@@ -1,0 +1,25 @@
+div, p {
+    margin-bottom: 20px;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+table td, table th {
+    padding: 10px;
+    border: 1px solid black;
+}
