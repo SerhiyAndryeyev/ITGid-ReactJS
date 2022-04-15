@@ -15,7 +15,7 @@ function App() {
   const div = React.createElement('div', { 'className': 'text-grey' }, p1, p2);
 
   const [list, setList] = useState([]);
-  const inputRef = React.createRef();
+  const inputRef = createRef();
 
   const createList = () => {
     if (!inputRef.current.value) return false;
