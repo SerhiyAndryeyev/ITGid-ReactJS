@@ -1,0 +1,209 @@
+1. Создаем приложение и устанавливаем redux toolkit
+1.1 npx create-react-app app_01
+1.2 cd app_01
+1.3 npm install react-redux
+1.4 npm install @reduxjs/toolkit
+
+2. Задача
+В App прописано два компонента. One, Two. Компоненты находятся на одном уровен и не вложены друг в друга
+<One />
+<Two />
+В компоненте One при нажатии кнопки button срабатывает функция btnHandler которая должна засунуть переменную z в store c помощью redux.
+Компонент Two должен просто выводить эту переменную из store. 
+Задача решалась бы просто если бы Two был вложен в One, тогда props могли бы решить эту задачу легко. Увы, тут не этот случай. 
+
+3. Планируем и пишем store
+Store состоит из частей (slice). Каждая часть store может - хранить и обрабатывать информацию store. Нам в общем нужен один slice. Давайте назовем его OneSliсe. One - от имени компонента где мы будем его активно применять. Желательно давать либо связанные с компонентом имена, либо логичные. Но желательно оконачивать на Slice.
+
+3.1 Создадим папку store внутри папки src. Здесь будем хранить наш store (его куски) и собирать в целое. 
+3.2 Создадим в src/store файл oneSlice.js - это тот slice о котором мы говорили выше. 
+3.3 Заполним oneSlice.js.
+	первой строкой подключим метод createSlice из установленного redux toolkit.
+	import { createSlice } from '@reduxjs/toolkit';
+
+	дальше заполним сам slice
+	export const oneSlice = createSlice();
+	
+	внутри createSlice() мы прописываем объект с параметрами данного slice. 
+3.4 Параметры createSlice - это объект с минимум тремя значениями:
+    {
+		name : - имя которое мы будем использовать в action для обращения к данному slice,
+		initialState: начальное значение для reducer (преобразований) т.е. те данные, которые должны лежать в store при старте. Могут быть любого типа. 
+		reducers: объект где ключами выступают именя reducers( методов преобразователей) а значениями - функции. Позволяют выполнять операции над данными в store. 
+	}
+	
+	Сложно? Да, давайте рассмотрим простой пример
+	export const oneSlice = createSlice({
+		  name: 'one', // любое имя
+		  initialState: 50,
+		  reducers: {
+			 abcd : state => {
+			  state = state + 150;
+			  return state;
+			}
+		  }
+	});
+	
+3.5 Давайте добавим export default в наш oneSlice.js, добавим строку
+	export default oneSlice;
+	И теперь наш файл выглядит так:
+	
+	import { createSlice } from '@reduxjs/toolkit';
+
+	export const oneSlice = createSlice({
+		name: 'one', // любое имя
+		initialState: 50,
+		reducers: {
+		   abcd : state => {
+			state = state + 150;
+		  }
+		}
+	});
+
+	export default oneSlice;
+
+4. Собираем store
+4.1 Мы знаем, что когда создаем папку с компонентами то нужно добавить index.js чтобы собрать их все вместе. Давайте созданим в src/store такой файл и назовем его store.js. 
+4.2 Внутри мы подключим инструмент toolkit: 
+	import { configureStore } from '@reduxjs/toolkit';
+	и импортируем наш "кусочек" oneSlice.js под таким же именем.
+	import oneSlice from './oneSlice';
+
+4.3 Соберем все в одну конфигурацию. 
+	export default configureStore({
+		reducer: {
+			one : oneSlice.reducer,
+		}
+	});
+	!!!! Важно. oneSlice.reducer - в единственном числе!!!!
+	возможно вам покажется этот синтаксис излишним, но поверьте - если у нас будет несколько slice = то это будет просто удобно. 
+	
+4.4 Подключим store к нашему проекту. Идем в src/index.js и импортируем туда store под таким же именем.
+	import store from './store/store';
+	такая запись /store/store обусловлена тем, что мы назвали наш основной файл store.js а не index.js.
+	Оборачиваем <App /> компонентом <Provider store = {store}> вот так
+	<Provider store={store}>
+      <App />
+    </Provider>
+	логично, что если бы у нас store был импортирован под другим именем то внутри {} стояло бы это имя.
+	обратите внимание, мы использовали Provider, а следовательно  - дописываем:
+	import { Provider } from 'react-redux';
+	Компонент Provider обеспечивает доступ к store всем вложенным в него компонентам.
+4.5 Супер. Поскольку у нас в store в initialState есть значение по умолчанию - попробуем вывести его в Two (компоненте).
+Контроль. На этом этапе можно запустить проект и посмотреть в консоль. Не должно быть ошибок. 
+
+
+5. Вывод значения из store.
+	5.1 Давайте создадим компонент Two.js. Итак, в src создаем Two.js. 
+	Внутри него пишем 
+	export default function Two() {
+		return (
+			<div>
+			<h2>Two</h2>
+			</div>
+		);
+	}
+	5.2 Внутри App.js удалим все внутри return кроме корневого div и подключим Two.js, не забываем импортировать его. 
+	Теперь App.js выглядит так
+	import Two from './Two';
+
+		function App() {
+		  return (
+			<div>
+				<Two />
+			</div>
+		  );
+		}
+
+		export default App;
+
+	
+	5.3 У нас есть компонент Two, давайте выведем в него значение по умолчанию из store/one. Не забыли? Это "one" имя нашего slice. Обратите внимание, что сам компонент One.js мы не создали даже еще. Но поскольку мы договорились о структуре store, то нам пока это и не нужно. 
+	Для получения данных из store в redux применяют useSelector. На нужно его импортировать в Two.js
+	
+	import { userSelector } from "react-redux";
+
+	export default function Two() {
+		return (
+			<div>
+			<h2>Two</h2>
+			</div>
+		);
+	}
+	
+	useSelector применяется так
+	let d = useSelector(state => state.one);
+	Если все сделано верно - на страницу выводится число 50. Кстати, для этого я написал внутри Two так:
+	import { useSelector } from "react-redux";
+
+	export default function Two() {
+		// получаем данные из store
+		let d = useSelector(state => state.one);
+
+		return (
+			<div>
+			<h2>Two</h2>
+			<div>{d}</div>
+			</div>
+		);
+	}
+	
+6. Кладем данные в store
+   6.1 Давайте закинем данные в store. Иделать будем это из компонента One.js. Создаем в src/ файл One.js и пишем следующий код в нем:
+   export default function One() {
+
+		function btnHandler(){
+			
+		}
+
+		return (
+			<div>
+				<button onClick={btnHandler}>Button</button>
+			</div>
+		)
+	}
+	
+	Не забываем ипортировать One.js в App.js и вставить на страницу. 
+	
+	6.2 Для работы с store нам понадобится импортировать нужный там slice в One.js (пишем в One.js)
+	import oneSlice from './store/oneSlice';
+	для отправки данных в store применяется dispatch, подключаем его
+	import { useDispatch } from 'react-redux';
+	(мы все еще работаем в One.js).
+	
+	Теперь допишем код в One.js
+	
+	import oneSlice from './store/oneSlice';
+	import { useDispatch } from 'react-redux';
+
+
+	export default function One() {
+
+	const actions = oneSlice.actions;
+	const dispatch = useDispatch();
+
+	function btnHandler(){
+		dispatch(actions.abcd())
+	}
+
+	return (
+		<div>
+			<button onClick={btnHandler}>Button</button>
+		</div>
+	)
+	}
+	
+	Давайте разберем код. 
+	У нас внутри slice есть reducers - это действия которые можно производить на данными в store. Получить эти функции можно через oneSlice.actions. Для удобства мы создали константу. 
+	const actions = oneSlice.actions;
+	Также у нас есть хук const dispatch = useDispatch(); его мы пишем внутри функции компонента. 
+	Теперь чтобы выполнить action мы должны просто внутри функции сделать
+	dispatch(actions.имя_нашего_редьюсера()) 
+	
+	если все верно - то на странице к 50 прибавится 150. При повторном нажатии еще 150 и т.д. 
+	
+	=========================================
+	Что может смутить?
+	1. Внутри slice у нас reducers а тут action. Не смущайтесь. Напомню, что когда мы создавали oneSlice мы делали команду 
+	export const oneSlice = createSlice({}) куда передавали объект параметров и параметр у нас назывался reducers. Никто нам не обещал что внутри объекта эти данные будут под этим же именем. Для простоты можете считать что при выполнении createSlice функции, которые мы указали под ключем reducers копируются в ключ actions и в дальнейшем мы работаем с ним. 
+	
